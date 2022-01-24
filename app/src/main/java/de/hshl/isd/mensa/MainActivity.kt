@@ -8,6 +8,9 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import de.hshl.isd.mensa.ui.theme.MensaTheme
 import io.github.italbytz.adapters.meal.MockGetMealsCommand
@@ -31,6 +34,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainContent() {
     val service = MockGetMealsCommand()
+    val reload = remember { mutableStateOf("") }
 
     fun success(collections: List<MealCollection>) {
         Log.d("MainContent",collections.toString())
@@ -40,11 +44,13 @@ fun MainContent() {
         Log.e("MainContent", error.localizedMessage!!)
     }
 
-    service.execute(
-        MealQueryDTO(42, LocalDate.now()),
-        ::success,
-        ::failure
-    )
+    LaunchedEffect(reload) {
+        kotlin.runCatching {
+            service.execute(
+                MealQueryDTO(42, LocalDate.now())
+            )
+        }.onSuccess(::success).onFailure(::failure)
+    }
 
     Text(text = "Hello World!")
 }
